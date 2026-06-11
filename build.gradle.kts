@@ -3,7 +3,6 @@ plugins {
     alias(libs.plugins.shadow)
     alias(libs.plugins.loom)
     alias(libs.plugins.resourcefactory)
-    alias(libs.plugins.kotlin.serialization)
 }
 
 fun Project.git(command: String): String? {
@@ -27,7 +26,6 @@ dependencies {
     mappings(loom.officialMojangMappings())
     modImplementation(libs.fabric.api)
     modImplementation(libs.fabric.loader)
-    modImplementation(libs.fabric.language.kotlin)
     implementation(libs.serialization.json)
 }
 
