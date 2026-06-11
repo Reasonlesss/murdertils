@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "package": "codes.reason.murdertils.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "EntityRendererMixin",
+    "TextDisplayRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
