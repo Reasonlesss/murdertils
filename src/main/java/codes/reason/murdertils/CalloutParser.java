@@ -3,12 +3,13 @@ package codes.reason.murdertils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.PlayerInfo;
 
+import java.util.Arrays;
 import java.util.Locale;
 
 public final class CalloutParser {
     public ParsedCallout parse(String body, Minecraft client) {
         String[] words = body.trim().split("\\s+");
-        if (words.length < 2) {
+        if (words.length < 2 || containsNegation(words)) {
             return null;
         }
 
@@ -18,6 +19,12 @@ public final class CalloutParser {
             return null;
         }
         return new ParsedCallout(target, role);
+    }
+
+    private static boolean containsNegation(String[] words) {
+        return Arrays.stream(words)
+                .map(word -> word.replaceAll("[^A-Za-z]", ""))
+                .anyMatch(word -> word.equalsIgnoreCase("not"));
     }
 
     private String resolvePlayer(String token, Minecraft client) {

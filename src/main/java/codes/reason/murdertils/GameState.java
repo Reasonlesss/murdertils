@@ -205,6 +205,16 @@ public final class GameState {
         return Collections.unmodifiableMap(snapshot);
     }
 
+    public long distinctCallersFor(String target, Role role) {
+        String normalizedTarget = normalize(target);
+        return callouts.entrySet().stream()
+                .filter(entry -> entry.getValue().stream().anyMatch(callout ->
+                        callout.role() == role && normalize(callout.target()).equals(normalizedTarget)))
+                .map(entry -> normalize(entry.getKey()))
+                .distinct()
+                .count();
+    }
+
     public long gameStartedAt() {
         return gameStartedAt;
     }

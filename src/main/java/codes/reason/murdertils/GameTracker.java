@@ -14,6 +14,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class GameTracker {
+    private static final Pattern LEGACY_FORMATTING = Pattern.compile("&[0-9A-FK-OR]", Pattern.CASE_INSENSITIVE);
     private static final Pattern START = Pattern.compile("Starting the game with:\\s*(.+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern STARTING_ROLE = Pattern.compile(
             "(\\d+)\\s+(traitors?|accomplices?|fiends?|detectives?|doctors?|innocents?)",
@@ -30,7 +31,11 @@ public final class GameTracker {
     );
     private static final Pattern CHAT = Pattern.compile("^⏵\\s*([A-Za-z0-9_]{1,16}):\\s*(.+)$");
     private static final Pattern HEALED = Pattern.compile(
-            "❤\\s*Healed By\\s+([A-Za-z0-9_]{1,16})",
+            "❤\\s*Healed By:?\\s+([A-Za-z0-9_]{1,16})",
+            Pattern.CASE_INSENSITIVE
+    );
+    private static final Pattern PLAYER_LEFT = Pattern.compile(
+            "^-\\s+[A-Za-z0-9_]{1,16} left the game\\.$",
             Pattern.CASE_INSENSITIVE
     );
     private static final Pattern END_GAME = Pattern.compile(
@@ -77,11 +82,14 @@ public final class GameTracker {
             return;
         }
 
-        if (overlay) {
-            Matcher healed = HEALED.matcher(message);
-            if (healed.find()) {
-                state.setMarker(healed.group(1), Role.DOCTOR);
-            }
+        Matcher healed = HEALED.matcher(message);
+        if (healed.find()) {
+            state.setMarker(healed.group(1), Role.DOCTOR);
+        }
+
+        if (PLAYER_LEFT.matcher(message).matches()) {
+            state.endGame();
+            return;
         }
 
         Matcher start = START.matcher(message);
@@ -167,6 +175,11 @@ public final class GameTracker {
             return;
         }
         state.addCallout(caller, callout.target(), callout.role(), message);
+        if (callout.role() == Role.TRAITOR
+                && state.localRole() != Role.TRAITOR
+                && state.distinctCallersFor(callout.target(), Role.TRAITOR) >= 4) {
+            state.setMarker(callout.target(), Role.TRAITOR);
+        }
     }
 
     private void markCriminalTeammates(String teamLabel, String playerList, Minecraft client) {
@@ -254,7 +267,11 @@ public final class GameTracker {
     }
 
     private static String sanitize(String value) {
-        return value.replace("\u200C", "").replace("\u200B", "").trim();
+        return LEGACY_FORMATTING.matcher(value)
+                .replaceAll("")
+                .replace("\u200C", "")
+                .replace("\u200B", "")
+                .trim();
     }
 
     private static String normalize(String value) {

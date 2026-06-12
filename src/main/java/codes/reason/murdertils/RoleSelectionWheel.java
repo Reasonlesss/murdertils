@@ -2,9 +2,12 @@ package codes.reason.murdertils;
 
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.Display;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.HitResult;
@@ -60,7 +63,7 @@ public final class RoleSelectionWheel {
     private void open(Minecraft client) {
         String targetedPlayer = targetedPlayer(client);
         if (targetedPlayer == null) {
-            client.player.displayClientMessage(Component.literal("Look at a player to mark them."), true);
+            client.player.displayClientMessage(Component.literal("Look at a player or dead body to mark them."), true);
             return;
         }
         if (isProtectedCriminalTeammate(targetedPlayer)) {
@@ -125,12 +128,12 @@ public final class RoleSelectionWheel {
         Player localPlayer = client.player;
         Vec3 start = localPlayer.getEyePosition();
         Vec3 view = localPlayer.getViewVector(1.0F).normalize();
-        Player bestPlayer = null;
+        String bestPlayer = null;
         double bestAlignment = TARGET_CONE_COSINE;
         double bestDistanceSquared = Double.MAX_VALUE;
 
         for (Player player : client.level.players()) {
-            if (player == localPlayer || !player.isAlive()) {
+            if (player == localPlayer) {
                 continue;
             }
 
@@ -148,12 +151,79 @@ public final class RoleSelectionWheel {
 
             if (alignment > bestAlignment
                     || alignment == bestAlignment && distanceSquared < bestDistanceSquared) {
-                bestPlayer = player;
+                bestPlayer = player.getGameProfile().name();
                 bestAlignment = alignment;
                 bestDistanceSquared = distanceSquared;
             }
         }
-        return bestPlayer == null ? null : bestPlayer.getGameProfile().name();
+
+        for (Entity entity : client.level.entitiesForRendering()) {
+            if (entity instanceof Player) {
+                continue;
+            }
+
+            String label = entity instanceof Display.TextDisplay textDisplay
+                    ? textDisplay.getText().getString()
+                    : entity.getCustomName() == null ? null : entity.getCustomName().getString();
+            String playerName = playerNameInLabel(label, client);
+            if (playerName == null) {
+                continue;
+            }
+
+            Vec3 target = entity.position().add(0.0, entity.getBbHeight() * 0.5, 0.0);
+            Vec3 offset = target.subtract(start);
+            double distanceSquared = offset.lengthSqr();
+            if (distanceSquared > TARGET_DISTANCE * TARGET_DISTANCE || distanceSquared == 0.0) {
+                continue;
+            }
+
+            double alignment = view.dot(offset.normalize());
+            if (alignment < TARGET_CONE_COSINE
+                    || !hasLineOfSight(client, localPlayer, start, target, distanceSquared)) {
+                continue;
+            }
+
+            if (alignment > bestAlignment
+                    || alignment == bestAlignment && distanceSquared < bestDistanceSquared) {
+                bestPlayer = playerName;
+                bestAlignment = alignment;
+                bestDistanceSquared = distanceSquared;
+            }
+        }
+        return bestPlayer;
+    }
+
+    private static String playerNameInLabel(String label, Minecraft client) {
+        if (label == null || label.isBlank() || client.getConnection() == null) {
+            return null;
+        }
+
+        String normalizedLabel = label.toLowerCase(Locale.ROOT);
+        for (PlayerInfo info : client.getConnection().getListedOnlinePlayers()) {
+            String playerName = info.getProfile().name();
+            if (containsPlayerName(normalizedLabel, playerName.toLowerCase(Locale.ROOT))) {
+                return playerName;
+            }
+        }
+        return null;
+    }
+
+    private static boolean containsPlayerName(String text, String playerName) {
+        int index = text.indexOf(playerName);
+        while (index >= 0) {
+            int end = index + playerName.length();
+            boolean startsAtBoundary = index == 0 || !isPlayerNameCharacter(text.charAt(index - 1));
+            boolean endsAtBoundary = end == text.length() || !isPlayerNameCharacter(text.charAt(end));
+            if (startsAtBoundary && endsAtBoundary) {
+                return true;
+            }
+            index = text.indexOf(playerName, index + 1);
+        }
+        return false;
+    }
+
+    private static boolean isPlayerNameCharacter(char character) {
+        return Character.isLetterOrDigit(character) || character == '_';
     }
 
     private static boolean hasLineOfSight(
