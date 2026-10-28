@@ -12,7 +12,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.Locale;
 
@@ -43,7 +42,7 @@ public final class RoleSelectionWheel {
                 && client.player.isAlive();
         if (open && !eligible) {
             close(client);
-        } else if (eligible && down && !wasDown && client.screen == null) {
+        } else if (eligible && down && !wasDown && client.gui.screen() == null) {
             open(client);
         }
         if (open && down) {
@@ -63,11 +62,11 @@ public final class RoleSelectionWheel {
     private void open(Minecraft client) {
         String targetedPlayer = targetedPlayer(client);
         if (targetedPlayer == null) {
-            client.player.displayClientMessage(Component.literal("Look at a player or dead body to mark them."), true);
+            client.player.sendOverlayMessage(Component.literal("Look at a player or dead body to mark them."));
             return;
         }
         if (isProtectedCriminalTeammate(targetedPlayer)) {
-            client.player.displayClientMessage(Component.literal("You can't change marks on known criminals."), true);
+            client.player.sendOverlayMessage(Component.literal("You can't change marks on known criminals."));
             return;
         }
 
@@ -75,13 +74,8 @@ public final class RoleSelectionWheel {
         target = targetedPlayer;
         selection = null;
         openedAt = System.currentTimeMillis();
+        // releaseMouse() also centers the cursor in the window
         client.mouseHandler.releaseMouse();
-        long window = client.getWindow().handle();
-        GLFW.glfwSetCursorPos(
-                window,
-                client.getWindow().getWidth() / 2.0,
-                client.getWindow().getHeight() / 2.0
-        );
     }
 
     private void updateSelection(Minecraft client) {
