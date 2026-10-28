@@ -5,12 +5,11 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import org.lwjgl.glfw.GLFW;
 
 public class Murdertils implements ClientModInitializer {
     public static Murdertils INSTANCE;
@@ -43,17 +42,17 @@ public class Murdertils implements ClientModInitializer {
         KeyMapping.Category category = KeyMapping.Category.register(
                 Identifier.fromNamespaceAndPath("murdertils", "murdertils")
         );
-        roleSelectionWheelKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+        roleSelectionWheelKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.murdertils.role_selection_wheel",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_G,
+                InputConstants.Type.KEYBOARD,
+                InputConstants.KEY_G,
                 category
         ));
 
-        copyRoleInfoKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+        copyRoleInfoKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.murdertils.copy_role_info",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_C,
+                InputConstants.Type.KEYBOARD,
+                InputConstants.KEY_C,
                 category
         ));
     }
@@ -70,7 +69,7 @@ public class Murdertils implements ClientModInitializer {
             String summary = gameState.compactRoleSummary();
             if (summary != null) {
                 client.keyboardHandler.setClipboard(summary);
-                client.player.displayClientMessage(Component.literal("Copied role summary."), true);
+                client.player.sendOverlayMessage(Component.literal("Copied role summary."));
             }
         }
     }

@@ -23,10 +23,13 @@ description = "A shamelessly vibecoded utility mod for Murder Game"
 
 dependencies {
     minecraft(libs.minecraft)
-    mappings(loom.officialMojangMappings())
-    modImplementation(libs.fabric.api)
-    modImplementation(libs.fabric.loader)
+    implementation(libs.fabric.api)
+    implementation(libs.fabric.loader)
     implementation(libs.serialization.json)
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(25)
 }
 
 tasks.shadowJar {
