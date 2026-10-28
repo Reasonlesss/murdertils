@@ -2,7 +2,7 @@ package cloud.emilys.murdertils;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.component.DyedItemColor;
@@ -42,9 +42,9 @@ public final class HudRenderer {
         }
     }
 
-    public void render(GuiGraphics graphics, DeltaTracker tickCounter) {
+    public void render(GuiGraphicsExtractor graphics, DeltaTracker tickCounter) {
         Minecraft client = Minecraft.getInstance();
-        if (!state.isInGame() || client.player == null || client.options.hideGui) {
+        if (!state.isInGame() || client.player == null || client.gui.hud.isHidden()) {
             return;
         }
 
@@ -70,8 +70,8 @@ public final class HudRenderer {
         int panelX = right - panelWidth + offset;
         int panelHeight = 19 + Role.values().length * 11;
         graphics.fill(panelX, rightY, panelX + panelWidth, rightY + panelHeight, PANEL_BACKGROUND);
-        graphics.renderOutline(panelX, rightY, panelWidth, panelHeight, PANEL_OUTLINE);
-        graphics.drawString(
+        graphics.outline(panelX, rightY, panelWidth, panelHeight, PANEL_OUTLINE);
+        graphics.text(
                 font,
                 "Remaining roles",
                 panelX + PANEL_PADDING,
@@ -89,9 +89,9 @@ public final class HudRenderer {
             boolean eliminated = aliveCount == 0;
             int roleColor = eliminated ? 0xFF6D717C : role.color();
             int countColor = eliminated ? 0xFF8A8F9D : 0xFFFFFFFF;
-            graphics.drawString(font, roleName, panelX + PANEL_PADDING, rightY, roleColor, false);
-            graphics.drawString(font, alive, markedX - font.width(alive) - 3, rightY, countColor, false);
-            graphics.drawString(font, markedAlive, markedX, rightY, 0xFF8A8F9D, false);
+            graphics.text(font, roleName, panelX + PANEL_PADDING, rightY, roleColor, false);
+            graphics.text(font, alive, markedX - font.width(alive) - 3, rightY, countColor, false);
+            graphics.text(font, markedAlive, markedX, rightY, 0xFF8A8F9D, false);
             rightY += 11;
         }
 
@@ -108,7 +108,7 @@ public final class HudRenderer {
         renderRoleWheel(graphics, font);
     }
 
-    private void renderRoleWheel(GuiGraphics graphics, Font font) {
+    private void renderRoleWheel(GuiGraphicsExtractor graphics, Font font) {
         if (!roleSelectionWheel.isOpen()) {
             return;
         }
@@ -127,12 +127,12 @@ public final class HudRenderer {
                     || state.localRole() == Role.TRAITOR && (role == Role.TRAITOR || role == Role.ACCOMPLICE);
             int contentHeight = WHEEL_ITEM_SIZE + 4 + font.lineHeight;
             int contentTop = bounds.y() + (bounds.height() - contentHeight) / 2;
-            graphics.renderItem(
+            graphics.item(
                     disabled ? disabledRoleChestplates.get(role) : roleChestplates.get(role),
                     bounds.x() + (bounds.width() - WHEEL_ITEM_SIZE) / 2,
                     contentTop + WHEEL_CONTENT_Y_OFFSET
             );
-            graphics.drawCenteredString(
+            graphics.centeredText(
                     font,
                     role.displayName(),
                     bounds.x() + bounds.width() / 2,
@@ -141,7 +141,7 @@ public final class HudRenderer {
             );
         }
 
-        graphics.drawCenteredString(
+        graphics.centeredText(
                 font,
                 roleSelectionWheel.target(),
                 centerX,
@@ -149,10 +149,10 @@ public final class HudRenderer {
                 0xFFFFFFFF
         );
         String instruction = selectedRole == null ? "Look toward a role" : "Release to mark and copy";
-        graphics.drawCenteredString(font, instruction, centerX, centerY + 4 + WHEEL_CONTENT_Y_OFFSET, 0xFFB8BCC8);
+        graphics.centeredText(font, instruction, centerX, centerY + 4 + WHEEL_CONTENT_Y_OFFSET, 0xFFB8BCC8);
     }
 
-    private static void drawWheelBounds(GuiGraphics graphics, int centerX, int centerY) {
+    private static void drawWheelBounds(GuiGraphicsExtractor graphics, int centerX, int centerY) {
         int outerRadius = (int) RoleWheelLayout.OUTER_RADIUS;
         int innerRadius = (int) RoleWheelLayout.INNER_RADIUS;
         int background = 0x58101218;
@@ -171,7 +171,7 @@ public final class HudRenderer {
     }
 
     private int drawTimersPanel(
-            GuiGraphics graphics,
+            GuiGraphicsExtractor graphics,
             Font font,
             int anchor,
             int y,
@@ -208,26 +208,26 @@ public final class HudRenderer {
         int height = 17 + lineCount * 11;
         int left = alignRight ? anchor - width : anchor;
         graphics.fill(left, y, left + width, y + height, PANEL_BACKGROUND);
-        graphics.renderOutline(left, y, width, height, PANEL_OUTLINE);
-        graphics.drawString(font, "Timers", left + PANEL_PADDING, y + 4, PANEL_TITLE_COLOR, false);
+        graphics.outline(left, y, width, height, PANEL_OUTLINE);
+        graphics.text(font, "Timers", left + PANEL_PADDING, y + 4, PANEL_TITLE_COLOR, false);
 
         int lineY = y + 15;
         if (maxText != null) {
-            graphics.drawString(font, maxText, left + PANEL_PADDING, lineY, 0xFF73CDFF, false);
+            graphics.text(font, maxText, left + PANEL_PADDING, lineY, 0xFF73CDFF, false);
             lineY += 11;
         }
         if (coinText != null) {
-            graphics.drawString(font, coinText, left + PANEL_PADDING, lineY, 0xFFFFD45A, false);
+            graphics.text(font, coinText, left + PANEL_PADDING, lineY, 0xFFFFD45A, false);
             lineY += 11;
         }
         if (fiendText != null) {
-            graphics.drawString(font, fiendText, left + PANEL_PADDING, lineY, Role.FIEND.color(), false);
+            graphics.text(font, fiendText, left + PANEL_PADDING, lineY, Role.FIEND.color(), false);
         }
         return y + height;
     }
 
     private int drawCalloutsPanel(
-            GuiGraphics graphics,
+            GuiGraphicsExtractor graphics,
             Font font,
             int left,
             int y,
@@ -245,13 +245,13 @@ public final class HudRenderer {
 
         int height = 19 + lineCount * 11;
         graphics.fill(left, y, left + width, y + height, PANEL_BACKGROUND);
-        graphics.renderOutline(left, y, width, height, PANEL_OUTLINE);
-        graphics.drawString(font, "Callouts", left + PANEL_PADDING, y + 4, PANEL_TITLE_COLOR, false);
+        graphics.outline(left, y, width, height, PANEL_OUTLINE);
+        graphics.text(font, "Callouts", left + PANEL_PADDING, y + 4, PANEL_TITLE_COLOR, false);
 
         int lineY = y + 17;
         for (List<GameState.Callout> playerCallouts : callouts.values()) {
             for (GameState.Callout callout : playerCallouts) {
-                graphics.drawString(font, callout.text(), left + PANEL_PADDING, lineY, 0xFFFFFFFF, false);
+                graphics.text(font, callout.text(), left + PANEL_PADDING, lineY, 0xFFFFFFFF, false);
                 lineY += 11;
             }
         }
