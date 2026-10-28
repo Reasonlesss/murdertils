@@ -14,8 +14,8 @@ public final class TitleNotification {
     }
 
     public static void show(Minecraft client, String title, int color) {
-        client.gui.setTimes(FADE_IN_TICKS, STAY_TICKS, FADE_OUT_TICKS);
-        client.gui.setTitle(Component.literal(title).withColor(color));
+        client.gui.hud.setTimes(FADE_IN_TICKS, STAY_TICKS, FADE_OUT_TICKS);
+        client.gui.hud.setTitle(Component.literal(title).withColor(color));
         client.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_PLING, 1.0F));
     }
 }

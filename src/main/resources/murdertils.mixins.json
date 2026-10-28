@@ -1,7 +1,7 @@
 {
   "required": true,
   "package": "codes.reason.murdertils.mixin",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_25",
   "client": [
     "EntityRendererMixin",
     "TextDisplayRendererMixin"
