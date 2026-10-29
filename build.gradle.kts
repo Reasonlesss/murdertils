@@ -21,11 +21,14 @@ group = "cloud.emilys"
 version = "1.0.0"
 description = "A shamelessly vibecoded utility mod for Murder Game"
 
+val shade: Configuration by configurations.creating
+
 dependencies {
     minecraft(libs.minecraft)
     implementation(libs.fabric.api)
     implementation(libs.fabric.loader)
     implementation(libs.serialization.json)
+    shade(libs.serialization.json)
 }
 
 java {
@@ -33,6 +36,8 @@ java {
 }
 
 tasks.shadowJar {
+    // Only bundle our own libraries, not Minecraft or Fabric
+    configurations = listOf(shade)
     mergeServiceFiles()
     minimize()
 }
